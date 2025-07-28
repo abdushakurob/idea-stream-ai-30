@@ -3,7 +3,7 @@ import { Plus, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface NoteInputProps {
-  onNoteAdded: (note: { id: string; content: string; createdAt: string }) => void;
+  onNoteAdded: (content: string) => Promise<void>;
 }
 
 const NoteInput = ({ onNoteAdded }: NoteInputProps) => {
@@ -26,28 +26,10 @@ const NoteInput = ({ onNoteAdded }: NoteInputProps) => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call - in real app this would call the Edge Function
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newNote = {
-        id: Math.random().toString(36).substr(2, 9),
-        content: content.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      
-      onNoteAdded(newNote);
+      await onNoteAdded(content.trim());
       setContent("");
-      
-      toast({
-        title: "Note saved!",
-        description: "Your thought has been captured and vectorized.",
-      });
     } catch (error) {
-      toast({
-        title: "Error saving note",
-        description: "Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is done in the useNotes hook
     } finally {
       setIsSubmitting(false);
     }

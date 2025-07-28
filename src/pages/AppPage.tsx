@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNotes } from "@/hooks/useNotes";
 import Header from "@/components/Header";
 import NoteInput from "@/components/NoteInput";
 import SearchBar from "@/components/SearchBar";
 import NotesList from "@/components/NotesList";
 import StatsCard from "@/components/StatsCard";
 
-interface Note {
+interface DisplayNote {
   id: string;
   content: string;
   createdAt: string;
@@ -14,36 +17,23 @@ interface Note {
 }
 
 const AppPage = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const { notes, loading: notesLoading, saveNote, searchNotes } = useNotes();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Note[]>([]);
+  const [searchResults, setSearchResults] = useState<DisplayNote[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [totalSearches, setTotalSearches] = useState(0);
+  const navigate = useNavigate();
 
-  // Load initial demo data
+  // Redirect to auth if not logged in
   useEffect(() => {
-    const demoNotes: Note[] = [
-      {
-        id: "demo-1",
-        content: "Building a note-taking app with AI embeddings. The key is to make semantic search feel magical - users should be able to find ideas by meaning, not just exact keywords. Think about the user experience of rediscovering old thoughts.",
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: "demo-2", 
-        content: "Startup idea: A productivity tool that learns your work patterns and suggests optimal times for deep work vs meetings. Could integrate with calendar and use ML to predict when you'll be most focused.",
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: "demo-3",
-        content: "The best interfaces disappear. When designing software, especially AI-powered tools, the goal should be to make the intelligence feel effortless and natural. Users shouldn't think about the complexity underneath.",
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
-    setNotes(demoNotes);
-  }, []);
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
-  const handleNoteAdded = (newNote: Note) => {
-    setNotes(prev => [newNote, ...prev]);
+  const handleNoteAdded = async (content: string) => {
+    await saveNote(content);
   };
 
   const handleSearch = async (query: string) => {
@@ -58,38 +48,15 @@ const AppPage = () => {
     setTotalSearches(prev => prev + 1);
     
     try {
-      // Simulate semantic search - in real app this would call the Edge Function
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Mock semantic similarity scoring based on keyword overlap and content similarity
-      const results = notes
-        .map(note => {
-          const queryWords = query.toLowerCase().split(' ');
-          const noteWords = note.content.toLowerCase().split(' ');
-          
-          // Simple similarity calculation for demo
-          let similarity = 0;
-          queryWords.forEach(qWord => {
-            if (qWord.length > 2) {
-              noteWords.forEach(nWord => {
-                if (nWord.includes(qWord) || qWord.includes(nWord)) {
-                  similarity += 0.3;
-                }
-              });
-            }
-          });
-          
-          // Boost similarity for semantic matches (demo logic)
-          if (query.toLowerCase().includes('ai') && note.content.toLowerCase().includes('intelligence')) similarity += 0.4;
-          if (query.toLowerCase().includes('productivity') && note.content.toLowerCase().includes('work')) similarity += 0.3;
-          if (query.toLowerCase().includes('startup') && note.content.toLowerCase().includes('idea')) similarity += 0.3;
-          
-          return { ...note, similarity: Math.min(similarity, 0.95) };
-        })
-        .filter(note => note.similarity > 0.1)
-        .sort((a, b) => (b.similarity || 0) - (a.similarity || 0));
-      
-      setSearchResults(results);
+      const results = await searchNotes(query);
+      // Convert database notes to display notes
+      const displayResults: DisplayNote[] = results.map(note => ({
+        id: note.id,
+        content: note.content,
+        createdAt: note.created_at,
+        similarity: note.similarity
+      }));
+      setSearchResults(displayResults);
     } catch (error) {
       console.error('Search error:', error);
     } finally {
@@ -97,7 +64,32 @@ const AppPage = () => {
     }
   };
 
-  const displayedNotes = searchQuery ? searchResults : notes;
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary-muted/10 to-accent-muted/10 flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <span className="text-lg text-foreground">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will be redirected)
+  if (!user) {
+    return null;
+  }
+
+  // Convert database notes to display notes
+  const displayNotes: DisplayNote[] = notes.map(note => ({
+    id: note.id,
+    content: note.content,
+    createdAt: note.created_at,
+    similarity: note.similarity
+  }));
+
+  const notesToDisplay = searchQuery ? searchResults : displayNotes;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary-muted/10 to-accent-muted/10">
@@ -140,7 +132,17 @@ const AppPage = () => {
 
             {/* Notes List */}
             <div className="lg:col-span-3">
-              <NotesList notes={displayedNotes} searchQuery={searchQuery} />
+              {notesLoading ? (
+                <div className="note-card text-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+                  <p className="text-muted-foreground">Loading your notes...</p>
+                </div>
+              ) : (
+                <NotesList 
+                  notes={notesToDisplay} 
+                  searchQuery={searchQuery} 
+                />
+              )}
             </div>
           </div>
         </div>

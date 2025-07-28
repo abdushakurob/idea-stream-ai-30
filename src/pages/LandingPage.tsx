@@ -30,10 +30,10 @@ const LandingPage = () => {
             </div>
             
             <Link
-              to="/app"
+              to="/auth"
               className="inline-flex items-center space-x-2 bg-gradient-button text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition-transform duration-200 shadow-lg hover:shadow-glow"
             >
-              <span>Try Demo</span>
+              <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -65,7 +65,7 @@ const LandingPage = () => {
             
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
               <Link
-                to="/app"
+                to="/auth"
                 className="group inline-flex items-center space-x-3 bg-gradient-button text-white px-8 py-4 rounded-xl font-semibold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-glow"
               >
                 <span>Start Building Your Second Brain</span>
@@ -144,7 +144,7 @@ const LandingPage = () => {
             </p>
             
             <Link
-              to="/app"
+              to="/auth"
               className="inline-flex items-center space-x-3 bg-white text-primary px-10 py-5 rounded-xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-glow"
             >
               <span>Start Your Journey</span>
