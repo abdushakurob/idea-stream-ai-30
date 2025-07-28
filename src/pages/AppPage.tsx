@@ -12,7 +12,7 @@ import StatsCard from "@/components/StatsCard";
 interface DisplayNote {
   id: string;
   content: string;
-  createdAt: string;
+  created_at: string;
   similarity?: number;
 }
 
@@ -49,11 +49,10 @@ const AppPage = () => {
     
     try {
       const results = await searchNotes(query);
-      // Convert database notes to display notes
       const displayResults: DisplayNote[] = results.map(note => ({
         id: note.id,
         content: note.content,
-        createdAt: note.created_at,
+        created_at: note.created_at,
         similarity: note.similarity
       }));
       setSearchResults(displayResults);
@@ -64,7 +63,6 @@ const AppPage = () => {
     }
   };
 
-  // Show loading while checking auth
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-primary-muted/10 to-accent-muted/10 flex items-center justify-center">
@@ -76,16 +74,14 @@ const AppPage = () => {
     );
   }
 
-  // Don't render if not authenticated (will be redirected)
   if (!user) {
     return null;
   }
-
-  // Convert database notes to display notes
+  
   const displayNotes: DisplayNote[] = notes.map(note => ({
     id: note.id,
     content: note.content,
-    createdAt: note.created_at,
+    created_at: note.created_at,
     similarity: note.similarity
   }));
 
@@ -97,7 +93,6 @@ const AppPage = () => {
       
       <main className="container mx-auto px-6 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
-          {/* Hero Section */}
           <div className="text-center space-y-6 py-12">
             <div className="inline-flex items-center space-x-2 bg-primary-muted border border-primary/20 rounded-full px-4 py-2 mb-4">
               <Sparkles className="w-4 h-4 text-primary animate-float" />
@@ -113,24 +108,19 @@ const AppPage = () => {
             </p>
           </div>
 
-          {/* Note Input */}
           <div className="animate-slide-up">
             <NoteInput onNoteAdded={handleNoteAdded} />
           </div>
 
-          {/* Search Bar */}
           <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <SearchBar onSearch={handleSearch} isSearching={isSearching} />
           </div>
 
-          {/* Stats and Notes Layout */}
           <div className="grid lg:grid-cols-4 gap-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            {/* Sidebar with Stats */}
             <div className="lg:col-span-1">
               <StatsCard totalNotes={notes.length} totalSearches={totalSearches} />
             </div>
 
-            {/* Notes List */}
             <div className="lg:col-span-3">
               {notesLoading ? (
                 <div className="note-card text-center py-12">

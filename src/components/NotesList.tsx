@@ -4,7 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 interface Note {
   id: string;
   content: string;
-  createdAt: string;
+  created_at: string;
   similarity?: number;
 }
 
@@ -56,7 +56,7 @@ const NotesList = ({ notes, searchQuery }: NotesListProps) => {
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Clock className="w-4 h-4" />
                 <span>
-                  {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                 </span>
               </div>
               
